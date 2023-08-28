@@ -10,11 +10,14 @@ from telethon.tl.types import DocumentAttributeAnimated
 try:
     from .config import *
 except ImportError as e:
-    raise ImportError("Cannot import your config. Make sure you have a file called config.py inside of "
-                      "stimkysticker/stimkysticker") from e
+    raise ImportError(
+        "Cannot import your config. Make sure you have a file called config.py inside of "
+        "stimkysticker/stimkysticker"
+    ) from e
 
 from .labels.label import StimkyLabelException
 from .users import User
+from .utils.utils import random_bad_emote, random_happy_emote
 
 client = TelegramClient("bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 client.flood_sleep_threshold = 120
@@ -27,7 +30,8 @@ logger.add(sys.stdout, level="DEBUG")
 async def debug_id(ev):
     logger.debug(f"Responding to debug_id event from {ev.peer_id.user_id}")
     await ev.respond(
-        f"Hello! Your id is `{ev.peer_id.user_id}` please add it to the ADMIN_ID to give yourself privileges :)"
+        f"Hewwo! {random_happy_emote()} Your id is `{ev.peer_id.user_id}` please add it to the ADMIN_ID to give"
+        f" yourself privileges {random_happy_emote()}"
     )
 
 
@@ -37,24 +41,26 @@ async def info(ev):
     if ev.peer_id.user_id not in print_log.keys():
         logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
         await ev.respond(
-            "The printer is currently locked for you. Please enter the password!"
+            f"The printer is currently locked for you {random_bad_emote()} Please enter the password!"
         )
         return
     logger.debug(f"Responding to {ev.peer_id.user_id} with user info")
-    await ev.respond(f"{print_log[ev.peer_id.user_id].user_info}")
+    await ev.respond(
+        f"{random_happy_emote()}\n{print_log[ev.peer_id.user_id].user_info}"
+    )
 
 
 @client.on(events.NewMessage(pattern="^/start"))
 async def welcome(ev):
     logger.debug(f"Starting new session with {ev.peer_id.user_id}")
     await ev.respond(
-        f"Hello!\nWelcome to {FURSONA_NAME}'s label printer! Send me any sticker or other media to "
-        f"print it!"
+        f"Hewwo! {random_happy_emote()}\nWelcome to **{FURSONA_NAME}'s** STIMKY sticker printer! "
+        f"{random_happy_emote()} Send me a sticker or image to print it! {random_happy_emote()}"
     )
     if (ev.peer_id.user_id not in print_log.keys()) and PASSWORD:
         logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
         await ev.respond(
-            "The printer is currently locked for you. Please enter the password!"
+            f"The printer is currently locked for you! {random_bad_emote()} Please enter the password!"
         )
 
 
@@ -73,8 +79,8 @@ async def unlock_printer(ev):
         if PASSWORD:
             logger.success(f"{ev.peer_id.user_id} has unlocked the printer")
             await ev.respond(
-                f"Printer has been unlocked. {print_log[ev.peer_id.user_id].remaining_stickers_str}"
-                f" Have fun!"
+                f"Printer is unlocked!! {random_happy_emote()}\n {print_log[ev.peer_id.user_id].remaining_stickers_str}\n"
+                f" Have fun! Awoooooooo!{random_happy_emote()}"
             )
 
 
@@ -87,13 +93,13 @@ async def handler(ev):
     if ev.peer_id.user_id not in print_log.keys():
         logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
         await ev.respond(
-            "The printer is currently locked for you. Please enter the password!"
+            f"The printer is currently locked for you {random_bad_emote()} Please enter the password!"
         )
         return
     if not print_log[ev.peer_id.user_id].stickers_remaining:
         logger.error(f"{ev.peer_id.user_id} is out of stickers")
         await ev.respond(
-            f"Cannot print. {print_log[ev.peer_id.user_id].remaining_stickers_str}"
+            f"Cannot print. {random_bad_emote()}\n{print_log[ev.peer_id.user_id].remaining_stickers_str}"
         )
         return
     # Check if the file is valid
@@ -114,39 +120,46 @@ async def handler(ev):
 
     if not recieved_image:
         logger.debug(f"Unable to print file from {ev.peer_id.user_id}")
-        await ev.respond("Cannot print this. Try with a (static) sticker or a picture!")
+        await ev.respond(
+            f"Cannot print this {random_bad_emote()} Try with a (static) sticker or a picture! "
+            f"{random_happy_emote()}"
+        )
         return
 
     # Download the file unless it's in the cache!
     if not recieved_image.exists():
+        await ev.respond(
+            f"Downloading your image (can be slow on an RPi {random_happy_emote()} )..."
+        )
         logger.debug(
             f"{ev.peer_id.user_id}'s image {recieved_image} isn't cached, downloading..."
         )
         await client.download_media(msg, file=str(recieved_image))
     try:
+        await ev.respond(f"Printing! {random_happy_emote()}")
         logger.trace("Attempting print...")
         printed = await PRINTER.print(image_file=Path(recieved_image))
     except StimkyPrinterException as e:
-        await ev.respond(f"Printer Error: {e.message}")
+        await ev.respond(f"{random_bad_emote()} Printer Error: {e.message}")
         logger.error(
             f"Printer Error {e.message} while printing {ev.peer_id.user_id}'s file"
         )
         return
     except StimkyLabelException as e:
-        await ev.respond(f"Label Error: {e.message}")
+        await ev.respond(f"{random_bad_emote()} Label Error: {e.message}")
         logger.error(
             f"Label Error {e.message} while printing {ev.peer_id.user_id}'s file"
         )
         return
     except Exception as e:
-        await ev.respond(f"Unhandled Error: {e}")
+        await ev.respond(f"{random_bad_emote()} Unhandled Error: {e}")
         logger.error(f"Unhandled Error {e} while printing {ev.peer_id.user_id}'s file")
         return
 
     print_log[ev.peer_id.user_id].use_sticker(image_printed=printed)
     logger.success(f"Printed {printed} for {ev.peer_id.user_id} successfully")
     await ev.respond(
-        f"Your sticker has printed!\n{print_log[ev.peer_id.user_id].remaining_stickers_str}"
+        f"Your sticker has printed! {random_happy_emote()} \n{print_log[ev.peer_id.user_id].remaining_stickers_str}"
     )
 
 
