@@ -12,7 +12,7 @@ class BrotherDK(Label):
 
     @property
     def size_str(self) -> str:
-        if self.width_mm:
+        if self.height_mm:
             return f"{self.width_mm}x{self.height_mm}"
         else:
             return f"{self.width_mm}"

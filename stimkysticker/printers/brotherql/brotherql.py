@@ -4,16 +4,19 @@ from pathlib import Path
 
 from stimkysticker.labels.brotherdk import BrotherDK
 
+from ...labels.label import Label
 from ..printer import Printer, StimkyPrinterException
 
 
 class BrotherQl(Printer):
     usb_dev: Path = Path("/dev/usb/lp0")
     name: str
+    SUPPORTED_LABELS: typing.Tuple[Label]
 
     _err_strs = (
         "status not received",
         "errors occured" "printing potentially not successful",  # [sic]
+        "invalid value for",
     )
 
     def __init__(self, using_label: BrotherDK):
@@ -35,14 +38,14 @@ class BrotherQl(Printer):
         stdout = stdout.decode("utf-8").splitlines()
         for line in stdout:
             print(line)
-        self.check_errs(stdout=stdout, retcode=proc.returncode)
+        await self.check_errs(stdout=stdout, retcode=proc.returncode)
         return formatted_image
 
-    def check_errs(self, stdout: typing.List[str], retcode: int):
-        self.check_bad_label(stdout=stdout)
-        self.check_all_other_errs(stdout=stdout, retcode=retcode)
+    async def check_errs(self, stdout: typing.List[str], retcode: int):
+        await self.check_bad_label(stdout=stdout)
+        await self.check_all_other_errs(stdout=stdout, retcode=retcode)
 
-    def check_bad_label(self, stdout: typing.List[str]):
+    async def check_bad_label(self, stdout: typing.List[str]):
         for line in stdout:
             if "replace media error".casefold() in line.casefold():
                 raise StimkyPrinterException(
@@ -51,7 +54,7 @@ class BrotherQl(Printer):
                     f"and the printer is not out of labels"
                 )
 
-    def check_all_other_errs(self, stdout: typing.List[str], retcode: int):
+    async def check_all_other_errs(self, stdout: typing.List[str], retcode: int):
         errstrs: typing.List[str] = []
         for err in self._err_strs:
             for line in stdout:
@@ -63,3 +66,15 @@ class BrotherQl(Printer):
             if errstrs:
                 exception = f"{exception} and errors \n{newline.join(errstrs)}"
                 raise StimkyPrinterException(exception)
+
+
+async def brother_ql_exists() -> bool:
+    proc = await create_subprocess_shell("brother_ql", stdout=PIPE, stderr=STDOUT)
+    await proc.communicate()
+    return proc.returncode == 0
+
+
+async def user_in_lp() -> bool:
+    proc = await create_subprocess_shell("groups", stdout=PIPE, stderr=STDOUT)
+    out, err = await proc.communicate()
+    return "lp" in out.decode().split()

@@ -13,6 +13,7 @@ brother-ql = "^0.9.4"
 attrs = "^23.1.0"
 pyyaml = "^6.0.1"
 loguru = "^0.7.0"
+click = "^8.1.7"
 
 
 [tool.poetry.group.dev.dependencies]
