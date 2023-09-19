@@ -174,6 +174,7 @@ async def main_loop(config: ConfigFile):
 async def _start_daemon(new_config: bool):
     if new_config:
         ConfigFile.edit_configfile(config_path=DEFAULT_CONFIG_LOCATION)
+        return
     config = ConfigFile.try_load(config_path=DEFAULT_CONFIG_LOCATION)
     if isinstance(config.printer, BrotherQl):
         if not await user_in_lp():
