@@ -1,10 +1,10 @@
 import typing
-from serial_asyncio import open_serial_connection
+from asyncio.streams import StreamWriter
 from asyncio.subprocess import PIPE, STDOUT, create_subprocess_shell
 from pathlib import Path
-from PIL import Image
-from asyncio.streams import StreamWriter
 
+from PIL import Image
+from serial_asyncio import open_serial_connection
 
 from stimkysticker.labels.brotherdk import BrotherDK
 

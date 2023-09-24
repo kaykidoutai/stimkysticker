@@ -1,8 +1,9 @@
 import typing
 from asyncio.subprocess import PIPE, STDOUT, create_subprocess_shell
 from pathlib import Path
-from PIL import Image, ImageOps
+
 import serial
+from PIL import Image, ImageOps
 
 from stimkysticker.labels.brotherdk import BrotherDK
 

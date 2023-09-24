@@ -1,6 +1,6 @@
+import asyncio
 import sys
 import typing
-import asyncio
 from os import makedirs
 from pathlib import Path
 
@@ -11,8 +11,8 @@ from telethon.tl.types import DocumentAttributeAnimated
 
 from .configfile import DEFAULT_CONFIG_LOCATION, ConfigFile
 from .labels.label import StimkyLabelException
-from .printers.printer import StimkyPrinterException
 from .printers.brotherql.brotherql import BrotherQl, brother_ql_exists, user_in_lp
+from .printers.printer import StimkyPrinterException
 from .users import User
 from .utils.utils import random_bad_emote, random_happy_emote
 
