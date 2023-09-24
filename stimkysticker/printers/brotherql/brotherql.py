@@ -28,7 +28,7 @@ class BrotherQl(Printer):
             raise StimkyPrinterException(
                 f"USB device {self.usb_dev} for {self.name} does not exist"
             )
-        formatted_image = self._label.format_image_for_label(image=image_file)
+        formatted_image = self._label.format_image_for_grayscale_label(image=image_file)
         cmd = (
             f"brother_ql -m {self.name} -b linux_kernel -p file://{self.usb_dev} print -l {self._label.size_str}"
             f" {formatted_image} -d"

@@ -178,12 +178,16 @@ async def _start_daemon(new_config: bool):
     config = ConfigFile.try_load(config_path=DEFAULT_CONFIG_LOCATION)
     if isinstance(config.printer, BrotherQl):
         if not await user_in_lp():
-            raise StimkyPrinterException("You are not part of the lp group. Add yourself with "
-                                         "\'sudo usermod -aG $USER lp\'")
+            raise StimkyPrinterException(
+                "You are not part of the lp group. Add yourself with "
+                "'sudo usermod -aG $USER lp'"
+            )
         logger.debug("Ensured that user is part of the lp group")
         if not await brother_ql_exists():
-            raise StimkyPrinterException("The brother_ql module is not part of your $PATH. Make sure "
-                                         "\'$HOME/.local/bin\' is in your path and brother_ql is installed")
+            raise StimkyPrinterException(
+                "The brother_ql module is not part of your $PATH. Make sure "
+                "'$HOME/.local/bin' is in your path and brother_ql is installed"
+            )
         logger.debug("Checked for brother_ql module")
     await main_loop(config=config)
 
@@ -201,4 +205,3 @@ def start_daemon(new_config: bool):
 
 if __name__ == "__main__":
     start_daemon()
-

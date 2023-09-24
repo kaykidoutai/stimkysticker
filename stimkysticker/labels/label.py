@@ -16,8 +16,16 @@ class Label(ABC):
     height_px_max: int  # Max height to prevent abuse
     width_px: int
 
-    def format_image_for_label(self, image: Path) -> Path:
-        return self.format_img(
+    def format_image_for_grayscale_label(self, image: Path) -> Path:
+        return self.format_img_grayscale(
+            filepath=image,
+            width=self.width_px,
+            height=self.height_px,
+            portrait=self.portrait,
+        )
+
+    def format_image_for_bw_label(self, image: Path) -> Path:
+        return self.format_img_bw(
             filepath=image,
             width=self.width_px,
             height=self.height_px,
@@ -30,7 +38,7 @@ class Label(ABC):
             return True
         return self.height_px > self.width_px
 
-    def format_img(
+    def format_img_grayscale(
         self,
         filepath: Path,
         width: int,
@@ -43,7 +51,7 @@ class Label(ABC):
         if not filepath.exists():
             raise FileNotFoundError(f"Image {filepath} does not exist")
         img = Image.open(filepath)
-        img = Label.color_correct(
+        img = Label.color_correct_grayscale(
             pil_img=img,
             gamma_correction=gamma_correction,
             background_color=background_color,
@@ -55,8 +63,28 @@ class Label(ABC):
         img.save(f"{formatted_path}", "PNG")
         return formatted_path
 
+    def format_img_bw(
+        self,
+        filepath: Path,
+        width: int,
+        height: typing.Optional[int],
+        portrait: bool,
+        background_color: str = "white",
+        file_stem: str = "_formatted",
+    ):
+        if not filepath.exists():
+            raise FileNotFoundError(f"Image {filepath} does not exist")
+        img = Image.open(filepath)
+        img = Label.color_correct_bw(pil_img=img, background_color=background_color)
+        img = self.resize_to_label(
+            pil_img=img, width=width, height=height, portrait_label=portrait
+        )
+        formatted_path = Path(f"{filepath.parent / filepath.stem}{file_stem}.png")
+        img.save(f"{formatted_path}", "PNG")
+        return formatted_path
+
     @staticmethod
-    def color_correct(
+    def color_correct_grayscale(
         pil_img: Image, gamma_correction: float, background_color: str = "white"
     ):
         if pil_img.mode == "RGBA":
@@ -70,6 +98,14 @@ class Label(ABC):
             pil_img = Image.eval(
                 pil_img, lambda x: int(255 * pow((x / 255), (1 / gamma_correction)))
             )
+        return pil_img
+
+    @staticmethod
+    def color_correct_bw(pil_img: Image, background_color: str = "white"):
+        if pil_img.mode == "RGBA":
+            bg_img = Image.new(pil_img.mode, pil_img.size, background_color)
+            pil_img = Image.alpha_composite(bg_img, pil_img)
+        pil_img = pil_img.convert("1")
         return pil_img
 
     def resize_to_label(

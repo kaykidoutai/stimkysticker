@@ -6,8 +6,12 @@ from pathlib import Path
 
 from attr import dataclass
 
-from .converters import (structure_label, structure_printer, unstructure_label,
-                         unstructure_printer)
+from .converters import (
+    structure_label,
+    structure_printer,
+    unstructure_label,
+    unstructure_printer,
+)
 from .labels.label import Label
 from .printers import PRINTER_DICT
 from .printers.printer import Printer
