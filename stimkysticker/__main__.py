@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import typing
+from importlib.resources import files
 from os import makedirs
 from pathlib import Path
 
@@ -9,7 +10,7 @@ from loguru import logger
 from telethon import TelegramClient, events
 from telethon.tl.types import DocumentAttributeAnimated
 
-from .configfile import DEFAULT_CONFIG_LOCATION, ConfigFile
+from .config.configfile import DEFAULT_CONFIG_NAME, ConfigFile
 from .labels.label import StimkyLabelException
 from .printers.brotherql.brotherql import BrotherQl, brother_ql_exists, user_in_lp
 from .printers.printer import StimkyPrinterException
@@ -17,10 +18,10 @@ from .users import User
 from .utils.utils import random_bad_emote, random_happy_emote
 
 
-async def main_loop(config: ConfigFile):
-    client = await TelegramClient("bot", int(config.api_id), config.api_hash).start(
-        bot_token=config.bot_token
-    )
+async def main_loop(config_file: ConfigFile):
+    client = await TelegramClient(
+        "bot", int(config_file.api_id), config_file.api_hash
+    ).start(bot_token=config_file.bot_token)
     client.flood_sleep_threshold = 120
     print_log: typing.Dict[int, User] = {}
     logger.remove()
@@ -52,29 +53,31 @@ async def main_loop(config: ConfigFile):
     async def welcome(ev):
         logger.debug(f"Starting new session with {ev.peer_id.user_id}")
         await ev.respond(
-            f"Hewwo! {random_happy_emote()}\nWelcome to **{config.fursona_name}'s** STIMKY sticker printer!\n"
+            f"Hewwo! {random_happy_emote()}\nWelcome to **{config_file.fursona_name}'s** STIMKY sticker printer!\n"
             f"{random_happy_emote()}\nSend me a sticker or image to print it!\n{random_happy_emote()}"
         )
-        if (ev.peer_id.user_id not in print_log.keys()) and config.password:
+        if (ev.peer_id.user_id not in print_log.keys()) and config_file.password:
             logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
             await ev.respond(
                 f"The printer is currently locked for you!\n{random_bad_emote()}\nPlease enter the password!"
             )
 
     # This one triggers on a single message with the pin code written
-    @client.on(events.NewMessage(pattern=config.password, func=lambda e: e.is_private))
+    @client.on(
+        events.NewMessage(pattern=config_file.password, func=lambda e: e.is_private)
+    )
     async def unlock_printer(ev):
         logger.debug(f"Attempting unlock for {ev.peer_id.user_id}")
         if ev.peer_id.user_id not in print_log.keys():
             print_log.update(
                 {
                     ev.peer_id.user_id: User.new_user(
-                        max_stickers=config.sticker_max,
-                        sticker_cost=config.sticker_cost,
+                        max_stickers=config_file.sticker_max,
+                        sticker_cost=config_file.sticker_cost,
                     )
                 }
             )
-            if config.password:
+            if config_file.password:
                 logger.success(f"{ev.peer_id.user_id} has unlocked the printer")
                 await ev.respond(
                     f"Printer is unlocked!!\n{random_happy_emote()}\n{print_log[ev.peer_id.user_id].remaining_stickers_str}\n"
@@ -104,10 +107,10 @@ async def main_loop(config: ConfigFile):
         # Check if the file is valid
         if msg.photo:
             logger.debug(f"{ev.peer_id.user_id} sent a photo, {msg.photo.id}.jpg")
-            recieved_image = Path(config.cache_dir / f"{msg.photo.id}.jpg")
+            recieved_image = Path(config_file.cache_dir / f"{msg.photo.id}.jpg")
         elif msg.sticker:
             logger.debug(f"{ev.peer_id.user_id} sent a sticker, {msg.sticker.id}.webp")
-            recieved_image = Path(config.cache_dir / f"{msg.sticker.id}.webp")
+            recieved_image = Path(config_file.cache_dir / f"{msg.sticker.id}.webp")
             for att in msg.sticker.attributes:
                 if isinstance(att, DocumentAttributeAnimated):
                     logger.debug(f"{ev.peer_id.user_id} sent an animated sticker")
@@ -137,7 +140,7 @@ async def main_loop(config: ConfigFile):
         try:
             await ev.respond(f"Printing! {random_happy_emote()}")
             logger.trace("Attempting print...")
-            printed = await config.printer.print(image_file=Path(recieved_image))
+            printed = await config_file.printer.print(image_file=Path(recieved_image))
         except StimkyPrinterException as e:
             await ev.respond(f"{random_bad_emote()} Printer Error: {e.message}")
             logger.error(
@@ -164,18 +167,19 @@ async def main_loop(config: ConfigFile):
         )
 
     logger.debug(
-        f"Using printer type {config.printer.name} and label {config.label.name}"
+        f"Using printer type {config_file.printer.name} and label {config_file.label.name}"
     )
-    makedirs(config.cache_dir, exist_ok=True)
+    makedirs(config_file.cache_dir, exist_ok=True)
     logger.info("Starting client")
     await client.run_until_disconnected()
 
 
 async def _start_daemon(new_config: bool):
-    if new_config:
-        ConfigFile.edit_configfile(config_path=DEFAULT_CONFIG_LOCATION)
+    config_file = Path(files("stimkysticker.config").joinpath(DEFAULT_CONFIG_NAME))
+    if new_config or not config_file.exists():
+        ConfigFile.edit_configfile(config_path=config_file)
         return
-    config = ConfigFile.try_load(config_path=DEFAULT_CONFIG_LOCATION)
+    config = ConfigFile.try_load(config_path=config_file)
     if isinstance(config.printer, BrotherQl):
         if not await user_in_lp():
             raise StimkyPrinterException(
@@ -189,7 +193,7 @@ async def _start_daemon(new_config: bool):
                 "'$HOME/.local/bin' is in your path and brother_ql is installed"
             )
         logger.debug("Checked for brother_ql module")
-    await main_loop(config=config)
+    await main_loop(config_file=config)
 
 
 @click.command()

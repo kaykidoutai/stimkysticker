@@ -1,0 +1,17 @@
+[Unit]
+Description=StimkySticker System Python Daemon
+Wants=network.target
+After=syslog.target network-online.target
+
+[Service]
+WorkingDirectory=/home/stimkysticker/stimkysticker/stimkysticker
+User=stimkysticker
+Type=simple
+ExecStart=/usr/bin/python3 -m stimkysticker
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+

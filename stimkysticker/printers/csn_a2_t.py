@@ -24,15 +24,15 @@ class CSNA2T(Printer):
     CHUNK_SIZE = CHUNK_HEIGHT * FIXED_WIDTH
     PRINT_INIT_SEQUENCE = (
         # Print speed and heat
-        int(27).to_bytes(),
-        int(55).to_bytes(),
-        int(7).to_bytes(),  # Default 64 dots = 8*('7'+1)
-        int(255).to_bytes(),  # Default 80 or 800us
-        int(255).to_bytes(),  # Default 2 or 20us
+        int(27).to_bytes(length=1, byteorder="little"),
+        int(55).to_bytes(length=1, byteorder="little"),
+        int(7).to_bytes(length=1, byteorder="little"),  # Default 64 dots = 8*('7'+1)
+        int(255).to_bytes(length=1, byteorder="little"),  # Default 80 or 800us
+        int(255).to_bytes(length=1, byteorder="little"),  # Default 2 or 20us
         # print density and timeout
-        int(18).to_bytes(),
-        int(35).to_bytes(),
-        int((15 << 4) | 15).to_bytes(),
+        int(18).to_bytes(length=1, byteorder="little"),
+        int(35).to_bytes(length=1, byteorder="little"),
+        int((15 << 4) | 15).to_bytes(length=1, byteorder="little"),
     )
 
     _initialized: bool = False
@@ -86,10 +86,10 @@ class CSNA2T(Printer):
             raise ValueError(f"Malformed image chunk. Data is empty")
         chunk_height = len(image_chunk) / CSNA2T.FIXED_WIDTH
         bitmap_commands = (
-            int(18).to_bytes(),
-            int(86).to_bytes(),
-            int(chunk_height).to_bytes(),
-            int(0).to_bytes(),
+            int(18).to_bytes(length=1, byteorder="little"),
+            int(86).to_bytes(length=1, byteorder="little"),
+            int(chunk_height).to_bytes(length=1, byteorder="little"),
+            int(0).to_bytes(length=1, byteorder="little"),
         )
         if chunk_height > CSNA2T.CHUNK_HEIGHT:
             raise ValueError(
@@ -110,13 +110,15 @@ class CSNA2T(Printer):
             pixels = list(image.getdata())
             for pixel in pixels:
                 if shifter == -1:
-                    final_data.append(int(current_byte).to_bytes())
+                    final_data.append(
+                        int(current_byte).to_bytes(length=1, byteorder="little")
+                    )
                     current_byte = 0
                     shifter = 7
                 if pixel == 0:
                     current_byte |= 1 << shifter
                 shifter -= 1
-            final_data.append(int(current_byte).to_bytes())
+            final_data.append(int(current_byte).to_bytes(length=1, byteorder="little"))
         return tuple(final_data)
 
     @staticmethod

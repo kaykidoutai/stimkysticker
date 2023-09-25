@@ -6,17 +6,17 @@ from pathlib import Path
 
 from attr import dataclass
 
-from .converters import (
+from stimkysticker.converters import (
     structure_label,
     structure_printer,
     unstructure_label,
     unstructure_printer,
 )
-from .labels.label import Label
-from .printers import PRINTER_DICT
-from .printers.printer import Printer
+from stimkysticker.labels.label import Label
+from stimkysticker.printers import PRINTER_DICT
+from stimkysticker.printers.printer import Printer
 
-DEFAULT_CONFIG_LOCATION = Path("stimky_config.json")
+DEFAULT_CONFIG_NAME = Path("stimky_config.json")
 
 
 @dataclass
