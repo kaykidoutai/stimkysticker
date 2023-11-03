@@ -14,7 +14,6 @@ class BrotherQl(Printer):
     SUPPORTED_LABELS: typing.Tuple[Label]
 
     _err_strs = (
-        "status not received",
         "errors occured" "printing potentially not successful",  # [sic]
         "invalid value for",
     )
@@ -23,7 +22,7 @@ class BrotherQl(Printer):
         self._label = using_label
         super().__init__(using_label=self._label)
 
-    async def print(self, image_file: Path) -> Path:
+    async def _print(self, image_file: Path) -> Path:
         if not self.usb_dev.exists():
             raise StimkyPrinterException(
                 f"USB device {self.usb_dev} for {self.name} does not exist"

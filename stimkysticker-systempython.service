@@ -1,11 +1,12 @@
+  GNU nano 6.2                                                               /etc/systemd/system/stimkysticker-systempython.service
 [Unit]
-Description=StimkySticker System Python Daemon
+Description="StimkySticker System Python Daemon"
 Wants=network.target
 After=syslog.target network-online.target
 
 [Service]
-WorkingDirectory=/home/stimkysticker/stimkysticker/stimkysticker
-User=stimkysticker
+WorkingDirectory=/home/<YOUR_USERNAME>/stimkysticker/
+User=k
 Type=simple
 ExecStart=/usr/bin/python3 -m stimkysticker
 Restart=on-failure
@@ -14,4 +15,3 @@ KillMode=process
 
 [Install]
 WantedBy=multi-user.target
-

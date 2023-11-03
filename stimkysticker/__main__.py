@@ -41,7 +41,7 @@ async def main_loop(config_file: ConfigFile):
         if ev.peer_id.user_id not in print_log.keys():
             logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
             await ev.respond(
-                f"The printer is currently locked for you\n{random_bad_emote()}\nPlease enter the password!"
+                f"The printer is currently locked for you\n{random_bad_emote()}\nPlease enter the password! (It's on the printer)"
             )
             return
         logger.debug(f"Responding to {ev.peer_id.user_id} with user info")
@@ -59,7 +59,7 @@ async def main_loop(config_file: ConfigFile):
         if (ev.peer_id.user_id not in print_log.keys()) and config_file.password:
             logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
             await ev.respond(
-                f"The printer is currently locked for you!\n{random_bad_emote()}\nPlease enter the password!"
+                f"The printer is currently locked for you!\n{random_bad_emote()}\nPlease enter the password! (It's on the printer)"
             )
 
     # This one triggers on a single message with the pin code written
@@ -95,7 +95,7 @@ async def main_loop(config_file: ConfigFile):
         if ev.peer_id.user_id not in print_log.keys():
             logger.error(f"Printer is currently locked for {ev.peer_id.user_id}")
             await ev.respond(
-                f"The printer is currently locked for you\n{random_bad_emote()}\nPlease enter the password!"
+                f"The printer is currently locked for you\n{random_bad_emote()}\nPlease enter the password! (It's on the printer)"
             )
             return
         if not print_log[ev.peer_id.user_id].stickers_remaining:

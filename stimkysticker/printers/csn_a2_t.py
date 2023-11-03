@@ -41,7 +41,7 @@ class CSNA2T(Printer):
         self._label = using_label
         super().__init__(using_label=self._label)
 
-    async def print(self, image_file: Path) -> Path:
+    async def _print(self, image_file: Path) -> Path:
         if not self.uart_dev.exists():
             raise StimkyPrinterException(
                 f"Serial UART device {self.uart_dev} for {self.name} does not exist"
